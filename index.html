@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>Comunicador CAA – Español</title>
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#0b0f14"/>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<style>
+  :root{--bg:#0b0f14;--card:#121823;--accent:#4fc3f7;--accent2:#a0f;--text:#eaf2ff;--muted:#9bb0c3}
+  html,body{height:100%} body{margin:0;background:var(--bg);color:var(--text);font-family:system-ui;-webkit-font-smoothing:antialiased;overflow-x:hidden}
+  .app{max-width:480px;margin:0 auto;min-height:100dvh;display:flex;flex-direction:column}
+  header{position:sticky;top:0;z-index:5;backdrop-filter:blur(10px);background:linear-gradient(180deg,rgba(18,24,35,.85),rgba(18,24,35,.65));border-bottom:1px solid rgba(255,255,255,.06);padding-top:env(safe-area-inset-top)}
+  .toolbar{display:flex;align-items:center;gap:.5rem;padding:.75rem .9rem}.title{font-weight:700}.spacer{flex:1}
+  .btn{appearance:none;border:1px solid rgba(255,255,255,.12);background:linear-gradient(180deg,rgba(255,255,255,.05),rgba(255,255,255,.02));color:var(--text);padding:.6rem .8rem;border-radius:14px;cursor:pointer;font-weight:600}
+  .btn.small{padding:.45rem .6rem;font-size:.9rem;border-radius:12px}
+  main{flex:1;padding:.9rem}.grid{display:grid;gap:.8rem;grid-template-columns:repeat(2,minmax(0,1fr))}
+  .card{position:relative;overflow:hidden;border-radius:18px;background:linear-gradient(180deg,rgba(255,255,255,.06),rgba(255,255,255,.03));border:1px solid rgba(255,255,255,.08);min-height:110px;display:flex;align-items:flex-end}
+  .card .imgWrap{position:absolute;inset:0;display:grid;place-items:center}.card img{width:100%;height:100%;object-fit:cover}
+  .label{position:relative;z-index:1;width:100%;background:linear-gradient(180deg,rgba(0,0,0,.0),rgba(0,0,0,.45));padding:.5rem .6rem;font-weight:700}
+  .dock{position:sticky;bottom:0;z-index:6;padding:.6rem .9rem;padding-bottom:calc(.6rem + env(safe-area-inset-bottom));display:flex;align-items:center;gap:.5rem;flex-wrap:wrap;background:linear-gradient(0deg,rgba(18,24,35,.9),rgba(18,24,35,.65));border-top:1px solid rgba(255,255,255,.06)}
+  .phrase{display:flex;gap:.4rem;flex:1;flex-wrap:wrap;min-height:48px}.token{display:inline-flex;gap:.3rem;padding:.25rem .45rem;border-radius:999px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12)}
+  .fab{position:fixed;right:18px;bottom:98px;z-index:7;border-radius:18px;padding:.9rem 1rem}
+</style>
+</head>
+<body>
+<div class="app" id="app">
+  <header>
+    <div class="toolbar">
+      <button class="btn small" id="backBtn" style="display:none">◀︎ Atrás</button>
+      <div class="title">Comunicador CAA</div>
+      <div class="spacer"></div>
+      <button class="btn small" id="addBtn">＋ Añadir</button>
+      <button class="btn small" id="settingsBtn">⚙︎ Ajustes</button>
+    </div>
+  </header>
+  <main>
+    <div class="path" id="path">Inicio</div>
+    <div class="grid" id="grid"></div>
+    <div class="empty" id="empty" style="display:none">No hay elementos aquí todavía.</div>
+  </main>
+  <div class="dock" id="dock">
+    <div class="phrase" id="phrase"></div>
+    <button class="btn" id="speakBtn">▶︎ Reproducir</button>
+    <button class="btn" id="clearBtn">⟲ Limpiar</button>
+  </div>
+  <button class="btn fab" id="fabAdd">＋</button>
+</div>
+
+<dialog id="settingsModal">
+  <div class="modalHead"><div style="font-weight:700">Ajustes</div><button class="btn small" onclick="closeModal('settingsModal')">✕</button></div>
+  <div class="modalBody">
+    <div class="field"><label for="voiceSelect">Voz (solo español)</label><select id="voiceSelect"></select></div>
+  </div>
+  <div class="modalBody"><div class="row"><button class="btn" id="saveSettingsBtn">Guardar</button><button class="btn" onclick="closeModal('settingsModal')">Cerrar</button></div></div>
+</dialog>
+
+<dialog id="catModal">
+  <div class="modalHead"><div id="catModalTitle" style="font-weight:700">Nueva sección</div><button class="btn small" onclick="closeModal('catModal')">✕</button></div>
+  <div class="modalBody">
+    <div class="field"><label>Nombre</label><input id="catName" type="text" placeholder="Ej. Acciones"/></div>
+    <div class="field"><label>Imagen de la sección (JPG o PNG)</label><input id="catImg" type="file" accept="image/png,image/jpeg,image/jpg"/></div>
+  </div>
+  <div class="modalBody"><div class="row"><button class="btn" id="saveCatBtn">Guardar</button><button class="btn" id="deleteCatBtn" style="display:none">Eliminar</button><button class="btn" onclick="closeModal('catModal')">Cancelar</button></div></div>
+</dialog>
+
+<dialog id="itemModal">
+  <div class="modalHead"><div id="itemModalTitle" style="font-weight:700">Nuevo elemento</div><button class="btn small" onclick="closeModal('itemModal')">✕</button></div>
+  <div class="modalBody">
+    <div class="field"><label>Palabra / Frase a leer</label><input id="itemText" type="text" placeholder="Ej. Quiero"/></div>
+    <div class="field"><label>Imagen (JPG o PNG)</label><input id="itemImg" type="file" multiple accept="image/png,image/jpeg,image/jpg"/></div>
+  </div>
+  <div class="modalBody"><div class="row"><button class="btn" id="saveItemBtn">Guardar</button><button class="btn" id="deleteItemBtn" style="display:none">Eliminar</button><button class="btn" onclick="closeModal('itemModal')">Cancelar</button></div></div>
+</dialog>
+
+<script>
+(()=>{
+  const LS_KEY = 'aac_data_v1';
+  let state = loadState();
+  let currentCategoryId = null;
+  let editingCategoryId = null;
+  let editingItemId = null;
+  let phrase = [];
+  function mkId(){ return Math.random().toString(36).slice(2,10); }
+  function mkCategory(name){ return { id: mkId(), name, img:null, items: [] }; }
+  function mkItem(text, img){ return { id: mkId(), text, img }; }
+  function defaultState(){ return { voiceURI:null, categories:[mkCategory('Acciones'),mkCategory('Personas'),mkCategory('Objetos'),mkCategory('Lugares'),mkCategory('Frases')] }; }
+  function loadState(){ try{const raw=localStorage.getItem(LS_KEY); if(!raw)return defaultState(); const s=JSON.parse(raw); s.categories?.forEach(c=>{if(!('img'in c))c.img=null}); return s;}catch(e){return defaultState()} }
+  function saveState(){ localStorage.setItem(LS_KEY, JSON.stringify(state)); }
+  const $=s=>document.querySelector(s), grid=$('#grid'), pathEl=$('#path'), emptyEl=$('#empty'), backBtn=$('#backBtn'), addBtn=$('#addBtn'), fabAdd=$('#fabAdd'), settingsBtn=$('#settingsBtn'), phraseEl=$('#phrase'), speakBtn=$('#speakBtn'), clearBtn=$('#clearBtn');
+  const voiceSelect=$('#voiceSelect'), saveSettingsBtn=$('#saveSettingsBtn'), catModalTitle=$('#catModalTitle'), catName=$('#catName'), catImg=$('#catImg'), saveCatBtn=$('#saveCatBtn'), deleteCatBtn=$('#deleteCatBtn'), itemModalTitle=$('#itemModalTitle'), itemText=$('#itemText'), itemImg=$('#itemImg'), saveItemBtn=$('#saveItemBtn'), deleteItemBtn=$('#deleteItemBtn');
+  function openModal(id){ document.getElementById(id).showModal() } window.closeModal=(id)=>document.getElementById(id).close();
+  function render(){ if(currentCategoryId){renderItems()}else{renderCategories()} renderPhrase() }
+  function renderCategories(){ pathEl.textContent='Inicio'; backBtn.style.display='none'; addBtn.textContent='＋ Añadir sección'; grid.innerHTML=''; const cats=state.categories; if(!cats.length){emptyEl.style.display='block';return} emptyEl.style.display='none'; cats.forEach(cat=>{ const card=document.createElement('div'); card.className='card'; card.addEventListener('click',()=>{currentCategoryId=cat.id;render()}); const wrap=document.createElement('div'); wrap.className='imgWrap'; if(cat.img){const im=document.createElement('img'); im.src=cat.img; wrap.appendChild(im)} else { const ph=document.createElement('div'); ph.style.cssText='width:100%;height:100%;background:linear-gradient(45deg,rgba(79,195,247,.12),rgba(160,0,255,.10))'; wrap.appendChild(ph)} const label=document.createElement('div'); label.className='label'; label.innerHTML=`<div style="display:flex;align-items:center;justify-content:space-between;gap:.4rem;"><div>${cat.name}</div><div class="chips"><span class="chip">${cat.items.length}</span><button class="btn small" onclick="event.stopPropagation(); editCategory('${cat.id}')">✎</button></div></div>`; card.appendChild(wrap); card.appendChild(label); grid.appendChild(card) }) }
+  function currentCategory(){ return state.categories.find(c=>c.id===currentCategoryId)||null }
+  function renderItems(){ const cat=currentCategory(); if(!cat){currentCategoryId=null;return render()} pathEl.innerHTML=`Inicio ▸ <b>${cat.name}</b>`; backBtn.style.display='inline-flex'; addBtn.textContent='＋ Añadir elemento'; grid.innerHTML=''; if(!cat.items.length){emptyEl.style.display='block'}else{emptyEl.style.display='none'}; cat.items.forEach(item=>{ const card=document.createElement('div'); card.className='card'; card.addEventListener('click',()=>addToPhrase(item)); const wrap=document.createElement('div'); wrap.className='imgWrap'; if(item.img){const im=document.createElement('img'); im.src=item.img; wrap.appendChild(im)} else {const ph=document.createElement('div'); ph.style.cssText='width:100%;height:100%;display:grid;place-items:center;font-size:2.2rem;opacity:.7'; ph.textContent='🗂️'; wrap.appendChild(ph)} const label=document.createElement('div'); label.className='label'; label.innerHTML=`<div style="display:flex;align-items:center;justify-content:space-between;gap:.4rem;"><div>${item.text}</div><div class="chips"><button class="btn small" onclick="event.stopPropagation(); editItem('${item.id}')">✎</button></div></div>`; card.appendChild(wrap); card.appendChild(label); grid.appendChild(card) }) }
+  function renderPhrase(){ phraseEl.innerHTML=''; phrase.forEach((t,i)=>{ const el=document.createElement('span'); el.className='token'; el.innerHTML=`${t.img?`<img src="${t.img}">`:''}<span>${t.text}</span> <span class="x">×</span>`; el.querySelector('.x').addEventListener('click',()=>{phrase.splice(i,1);renderPhrase()}); phraseEl.appendChild(el) }) }
+  backBtn.addEventListener('click',()=>{currentCategoryId=null;render()}); addBtn.addEventListener('click',onAddClicked); fabAdd.addEventListener('click',onAddClicked); settingsBtn.addEventListener('click',()=>{populateVoices();openModal('settingsModal')});
+  function onAddClicked(){ if(currentCategoryId){ editingItemId=null; itemText.value=''; itemImg.value=''; itemModalTitle.textContent='Nuevo elemento'; deleteItemBtn.style.display='none'; openModal('itemModal') } else { editingCategoryId=null; catName.value=''; catImg.value=''; catModalTitle.textContent='Nueva sección'; deleteCatBtn.style.display='none'; openModal('catModal') } }
+  saveSettingsBtn.addEventListener('click',()=>{ const sel=voiceSelect.value||null; state.voiceURI=sel; saveState(); closeModal('settingsModal') });
+  saveCatBtn.addEventListener('click', async ()=>{ const name=(catName.value||'').trim(); if(!name) return; let imgData=null; if(catImg.files&&catImg.files[0]){ imgData=await imageFileToDataURL(catImg.files[0],640,640) } if(editingCategoryId){ const cat=state.categories.find(c=>c.id===editingCategoryId); if(cat){ cat.name=name; if(imgData) cat.img=imgData } } else { state.categories.push({id:mkId(),name, img:imgData, items:[]}) } saveState(); closeModal('catModal'); render() });
+  deleteCatBtn.addEventListener('click',()=>{ if(!editingCategoryId) return; const idx=state.categories.findIndex(c=>c.id===editingCategoryId); if(idx>=0) state.categories.splice(idx,1); if(currentCategoryId===editingCategoryId) currentCategoryId=null; saveState(); closeModal('catModal'); render() });
+  saveItemBtn.addEventListener('click', async ()=>{
+    const text=(itemText.value||'').trim();
+    const files=(itemImg.files && itemImg.files.length)? Array.from(itemImg.files):[];
+    const cat=currentCategory(); if(!cat) return;
+    const pushItem=(t,dataURL)=> cat.items.push(mkItem(t||'—', dataURL||null));
+    if(editingItemId){
+      const it=cat.items.find(i=>i.id===editingItemId); if(!it) return;
+      it.text = text || it.text;
+      if(files.length){
+        const dataURL = await imageFileToDataURL(files[0],640,640);
+        it.img = dataURL;
+      }
+    } else {
+      if(files.length>1){
+        for(const f of files){
+          const dataURL = await imageFileToDataURL(f,640,640);
+          const nameGuess = (text || (f.name||'').replace(/\.[^.]+$/,''));
+          pushItem(nameGuess, dataURL);
+        }
+      } else {
+        let dataURL=null;
+        if(files.length===1){ dataURL=await imageFileToDataURL(files[0],640,640) }
+        pushItem(text || '', dataURL);
+      }
+    }
+    saveState(); closeModal('itemModal'); render();
+  });
+  deleteItemBtn.addEventListener('click',()=>{ const cat=currentCategory(); if(!cat||!editingItemId) return; const idx=cat.items.findIndex(i=>i.id===editingItemId); if(idx>=0) cat.items.splice(idx,1); saveState(); closeModal('itemModal'); render() });
+  speakBtn.addEventListener('click',()=>{ if(!phrase.length) return; speak(phrase.map(p=>p.text).join(' ')) });
+  clearBtn.addEventListener('click',()=>{ phrase=[]; renderPhrase() });
+  window.editCategory=(id)=>{ editingCategoryId=id; const cat=state.categories.find(c=>c.id===id); if(!cat) return; catName.value=cat.name; catImg.value=''; catModalTitle.textContent='Editar sección'; deleteCatBtn.style.display='inline-flex'; openModal('catModal') }
+  window.editItem=(id)=>{ editingItemId=id; const cat=currentCategory(); if(!cat) return; const it=cat.items.find(i=>i.id===id); if(!it) return; itemText.value=it.text; itemImg.value=''; itemModalTitle.textContent='Editar elemento'; deleteItemBtn.style.display='inline-flex'; openModal('itemModal') }
+  function addToPhrase(item){ phrase.push({text:item.text,img:item.img||null}); renderPhrase(); navigator.vibrate?.(10) }
+  function fileToDataURL(file){ return new Promise((res,rej)=>{ const fr=new FileReader(); fr.onload=()=>res(fr.result); fr.onerror=rej; fr.readAsDataURL(file) }) }
+  function imageFileToDataURL(file, maxW=640, maxH=640){ return new Promise((resolve,reject)=>{ const fr=new FileReader(); fr.onload=()=>{ const img=new Image(); img.onload=()=>{ let w=img.width,h=img.height; const r=Math.min(maxW/w, maxH/h, 1); const cw=Math.round(w*r), ch=Math.round(h*r); const c=document.createElement('canvas'); c.width=cw; c.height=ch; c.getContext('2d').drawImage(img,0,0,cw,ch); resolve(c.toDataURL('image/jpeg',0.9)) }; img.onerror=reject; img.src=fr.result }; fr.onerror=reject; fr.readAsDataURL(file) }) }
+  function populateVoices(){ const voices = speechSynthesis.getVoices().filter(v=>/^es(-|$)/i.test(v.lang)); voiceSelect.innerHTML=''; if(!voices.length){ const opt=document.createElement('option'); opt.textContent='No se encontraron voces en español'; opt.value=''; voiceSelect.appendChild(opt) } else { voices.forEach(v=>{ const o=document.createElement('option'); o.value=v.voiceURI; o.textContent=`${v.name} (${v.lang})`; if(state.voiceURI && state.voiceURI===v.voiceURI) o.selected=true; voiceSelect.appendChild(o) }); if(!state.voiceURI){ state.voiceURI=voices[0]?.voiceURI||null; saveState() } } }
+  window.speechSynthesis.onvoiceschanged=populateVoices;
+  function speak(text){ if(!('speechSynthesis'in window)) return alert('Este navegador no soporta síntesis de voz.'); const u=new SpeechSynthesisUtterance(text); const v=(speechSynthesis.getVoices().find(v=>v.voiceURI===state.voiceURI) || speechSynthesis.getVoices().find(v=>/^es(-|$)/i.test(v.lang))); if(v) u.voice=v; else u.lang='es-ES'; u.rate=1; u.pitch=1; u.volume=1; speechSynthesis.cancel(); speechSynthesis.speak(u) }
+  if('serviceWorker' in navigator){ window.addEventListener('load',()=>{ navigator.serviceWorker.register('./service-worker.js') }) }
+  populateVoices(); render();
+})();
+</script>
+</body>
+</html>
